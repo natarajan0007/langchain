@@ -19,6 +19,7 @@ Example:
 from __future__ import annotations
 
 import logging
+import uuid as uuid_mod
 from typing import Any, Protocol, runtime_checkable
 
 from langchain_core.execution.context import ExecutionContext
@@ -91,7 +92,7 @@ class InstrumentationProvider(Protocol):
         """Record a numeric metric.
 
         Args:
-            name: The metric name (e.g., ``"token_count"``, ``"latency_ms"``).
+            name: The metric name (e.g., `"token_count"`, `"latency_ms"`).
             value: The metric value.
             context: The execution context for attribution.
             unit: Optional unit of measurement.
@@ -108,7 +109,7 @@ class InstrumentationProvider(Protocol):
         """Log a semantic event.
 
         Args:
-            name: The event name (e.g., ``"tool_selected"``, ``"retry_attempt"``).
+            name: The event name (e.g., `"tool_selected"`, `"retry_attempt"`).
             context: The execution context for attribution.
             data: Optional event payload.
         """
@@ -167,8 +168,8 @@ class NoOpProvider:
 
 
 class CallbackBridgeProvider:
-    """Bridge that wraps existing ``BaseCallbackHandler`` instances as an
-    ``InstrumentationProvider``.
+    """Bridge that wraps existing `BaseCallbackHandler` instances as an
+    `InstrumentationProvider`.
 
     This allows gradual migration from the callback-based instrumentation
     system to the new provider-based system.
@@ -184,7 +185,7 @@ class CallbackBridgeProvider:
         """Initialize the bridge provider.
 
         Args:
-            handlers: List of ``BaseCallbackHandler`` instances to delegate to.
+            handlers: List of `BaseCallbackHandler` instances to delegate to.
         """
         self._handlers: list[Any] = list(handlers or [])
 
@@ -196,14 +197,13 @@ class CallbackBridgeProvider:
     ) -> None:
         """Translate span start to callback handler events.
 
-        Maps to ``on_chain_start``, ``on_tool_start``, or ``on_llm_start``
-        based on the context's ``run_type``.
+        Maps to `on_chain_start`, `on_tool_start`, or `on_llm_start`
+        based on the context's `run_type`.
 
         Args:
             context: The execution context for this span.
             inputs: The inputs to the span.
         """
-        import uuid as uuid_mod  # noqa: PLC0415
 
         run_id = (
             uuid_mod.UUID(context.span_id)
@@ -256,7 +256,6 @@ class CallbackBridgeProvider:
             context: The execution context for this span.
             outputs: The outputs of the span.
         """
-        import uuid as uuid_mod  # noqa: PLC0415
 
         run_id = (
             uuid_mod.UUID(context.span_id)
@@ -296,7 +295,6 @@ class CallbackBridgeProvider:
             context: The execution context for this span.
             error: The exception that caused the failure.
         """
-        import uuid as uuid_mod  # noqa: PLC0415
 
         run_id = (
             uuid_mod.UUID(context.span_id)
@@ -348,14 +346,13 @@ class CallbackBridgeProvider:
         context: ExecutionContext,
         data: Any = None,
     ) -> None:
-        """Translate semantic events to ``on_text`` callback calls.
+        """Translate semantic events to `on_text` callback calls.
 
         Args:
             name: The event name.
             context: The execution context.
             data: Optional event payload.
         """
-        import uuid as uuid_mod  # noqa: PLC0415
 
         run_id = (
             uuid_mod.UUID(context.span_id)

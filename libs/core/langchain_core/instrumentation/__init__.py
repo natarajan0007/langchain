@@ -5,7 +5,7 @@
     This module is part of an architectural improvement initiative.
     APIs may change in future versions.
 
-Provides the ``InstrumentationProvider`` protocol for component-type-agnostic
+Provides the `InstrumentationProvider` protocol for component-type-agnostic
 instrumentation that follows OpenTelemetry-compatible patterns.
 """
 

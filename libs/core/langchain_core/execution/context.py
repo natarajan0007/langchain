@@ -1,14 +1,15 @@
 """Unified execution context for LangChain runtime.
 
-Provides a single ``ExecutionContext`` object that carries all execution state
+Provides a single `ExecutionContext` object that carries all execution state
 through the call stack. This replaces the fragmented context propagation across
-``RunnableConfig``, ``CallbackManager``, and ``ContextVar`` instances.
+`RunnableConfig`, `CallbackManager`, and `ContextVar` instances.
 
-The ``ExecutionContext`` is designed to be:
+The `ExecutionContext` is designed to be:
 
-- **Immutable-ish**: Child contexts are new objects; parents are not mutated.
+- **Immutable**: The dataclass is frozen to prevent attribute mutation.
+  Child contexts are new objects; parents are never modified.
 - **Serializable**: All fields are JSON-safe primitives.
-- **Bridge-compatible**: Can convert to/from ``RunnableConfig`` for migration.
+- **Bridge-compatible**: Can convert to/from `RunnableConfig` for migration.
 
 Example:
 
@@ -38,15 +39,15 @@ class ExecutionContext:
     """Unified execution context carrying all state through the call stack.
 
     This provides a single source of truth for execution metadata, replacing
-    the fragmented propagation across ``RunnableConfig``, ``CallbackManager``,
-    and tracer ``run_map`` dictionaries.
+    the fragmented propagation across `RunnableConfig`, `CallbackManager`,
+    and tracer `run_map` dictionaries.
 
     Attributes:
         trace_id: Unique identifier for the entire trace (root-level operation).
         span_id: Unique identifier for this specific span within the trace.
-        parent_span_id: Span ID of the parent context, or ``None`` for root.
-        run_type: Type of the current execution unit (e.g., ``"chain"``,
-            ``"llm"``, ``"tool"``, ``"retriever"``).
+        parent_span_id: Span ID of the parent context, or `None` for root.
+        run_type: Type of the current execution unit (e.g., `"chain"`,
+            `"llm"`, `"tool"`, `"retriever"`).
         name: Human-readable name for the current span.
         tags: Tags inherited from parent and augmented locally.
         metadata: Metadata inherited from parent and augmented locally.
@@ -80,7 +81,7 @@ class ExecutionContext:
             trace_id: Optional explicit trace ID. Generated if not provided.
 
         Returns:
-            A new root ``ExecutionContext``.
+            A new root `ExecutionContext`.
         """
         root_id = trace_id or _new_span_id()
         return cls(
@@ -103,7 +104,7 @@ class ExecutionContext:
     ) -> ExecutionContext:
         """Create a child execution context inheriting from this context.
 
-        The child shares the same ``trace_id`` and inherits tags and metadata,
+        The child shares the same `trace_id` and inherits tags and metadata,
         with optional additions.
 
         Args:
@@ -113,7 +114,7 @@ class ExecutionContext:
             extra_metadata: Additional metadata to merge with inherited metadata.
 
         Returns:
-            A new child ``ExecutionContext``.
+            A new child `ExecutionContext`.
         """
         child_tags = self.tags
         if extra_tags:
@@ -135,16 +136,16 @@ class ExecutionContext:
 
     @classmethod
     def from_runnable_config(cls, config: dict[str, Any]) -> ExecutionContext:
-        """Create an ``ExecutionContext`` from a ``RunnableConfig`` dict.
+        """Create an `ExecutionContext` from a `RunnableConfig` dict.
 
         This is a bridge method for migration from the existing config-based
         context propagation system.
 
         Args:
-            config: A ``RunnableConfig`` dictionary.
+            config: A `RunnableConfig` dictionary.
 
         Returns:
-            An ``ExecutionContext`` populated from the config.
+            An `ExecutionContext` populated from the config.
         """
         run_id = config.get("run_id")
         span_id = str(run_id) if run_id else _new_span_id()
@@ -163,13 +164,13 @@ class ExecutionContext:
         )
 
     def to_runnable_config(self) -> dict[str, Any]:
-        """Convert this context to a ``RunnableConfig``-compatible dict.
+        """Convert this context to a `RunnableConfig`-compatible dict.
 
         This is a bridge method for migration from the existing config-based
         context propagation system.
 
         Returns:
-            A dictionary compatible with ``RunnableConfig``.
+            A dictionary compatible with `RunnableConfig`.
         """
         return {
             "run_id": uuid.UUID(self.span_id) if self._is_valid_uuid(self.span_id) else None,
@@ -184,14 +185,14 @@ class ExecutionContext:
 
         Returns:
             List of span IDs representing the path from root to this span.
-            For a root context, returns ``[span_id]``.
-            For a child context, returns ``[parent_span_id, span_id]``.
+            For a root context, returns `[span_id]`.
+            For a child context, returns `[parent_span_id, span_id]`.
 
         !!! note
 
             This only includes the immediate parent linkage stored in this
             context. For full ancestry reconstruction across the entire trace,
-            use the tracer's ``run_map``.
+            use the tracer's `run_map`.
         """
         if self.parent_span_id is None:
             return [self.span_id]
@@ -205,7 +206,7 @@ class ExecutionContext:
             val: The string to check.
 
         Returns:
-            ``True`` if the string is a valid UUID.
+            `True` if the string is a valid UUID.
         """
         try:
             uuid.UUID(val)
@@ -215,8 +216,8 @@ class ExecutionContext:
 
 
 #: ContextVar for implicit propagation of execution context down the call stack.
-#: This mirrors the pattern used by ``var_child_runnable_config`` in
-#: ``langchain_core.runnables.config``.
+#: This mirrors the pattern used by `var_child_runnable_config` in
+#: `langchain_core.runnables.config`.
 var_execution_context: ContextVar[ExecutionContext | None] = ContextVar(
     "execution_context", default=None
 )
@@ -226,6 +227,6 @@ def get_current_context() -> ExecutionContext | None:
     """Get the current execution context from the ContextVar.
 
     Returns:
-        The current ``ExecutionContext``, or ``None`` if not set.
+        The current `ExecutionContext`, or `None` if not set.
     """
     return var_execution_context.get()
