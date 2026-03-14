@@ -3,13 +3,13 @@
 This script demonstrates that in the current LangChain architecture, execution
 context is fragmented across multiple systems:
 
-1. ``RunnableConfig`` (tags, metadata, run_id)
-2. ``CallbackManager`` (run_id, parent_run_id, handlers)
-3. ``var_child_runnable_config`` ContextVar (implicit propagation)
-4. Tracer ``run_map`` (hierarchical run tree)
+1. `RunnableConfig` (tags, metadata, run_id)
+2. `CallbackManager` (run_id, parent_run_id, handlers)
+3. `var_child_runnable_config` ContextVar (implicit propagation)
+4. Tracer `run_map` (hierarchical run tree)
 
 A component executing within a chain must understand all four systems to
-reconstruct its full execution context. The proposed ``ExecutionContext``
+reconstruct its full execution context. The proposed `ExecutionContext`
 provides a single unified API.
 
 Run with::

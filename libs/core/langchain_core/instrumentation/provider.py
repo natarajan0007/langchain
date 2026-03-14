@@ -27,6 +27,41 @@ from langchain_core.execution.context import ExecutionContext
 logger = logging.getLogger(__name__)
 
 
+def _parse_or_generate_uuid(val: str | None) -> uuid_mod.UUID | None:
+    """Parse a string as UUID, falling back to a new UUID or None.
+
+    Args:
+        val: The string to parse. If ``None``, returns ``None``.
+
+    Returns:
+        Parsed UUID, a new random UUID if parsing fails on a non-None value,
+        or ``None`` if val was ``None``.
+    """
+    if val is None:
+        return None
+    try:
+        return uuid_mod.UUID(val)
+    except (ValueError, AttributeError):
+        return uuid_mod.uuid4()
+
+
+def _parse_uuid_or_none(val: str | None) -> uuid_mod.UUID | None:
+    """Parse a string as UUID, returning None if invalid or input is None.
+
+    Args:
+        val: The string to parse.
+
+    Returns:
+        Parsed UUID or ``None``.
+    """
+    if val is None:
+        return None
+    try:
+        return uuid_mod.UUID(val)
+    except (ValueError, AttributeError):
+        return None
+
+
 @runtime_checkable
 class InstrumentationProvider(Protocol):
     """Protocol for instrumentation providers.
@@ -205,17 +240,8 @@ class CallbackBridgeProvider:
             inputs: The inputs to the span.
         """
 
-        run_id = (
-            uuid_mod.UUID(context.span_id)
-            if ExecutionContext._is_valid_uuid(context.span_id)
-            else uuid_mod.uuid4()
-        )
-        parent_run_id = (
-            uuid_mod.UUID(context.parent_span_id)
-            if context.parent_span_id
-            and ExecutionContext._is_valid_uuid(context.parent_span_id)
-            else None
-        )
+        run_id = _parse_or_generate_uuid(context.span_id)
+        parent_run_id = _parse_uuid_or_none(context.parent_span_id)
 
         event_name = {
             "chain": "on_chain_start",
@@ -257,11 +283,7 @@ class CallbackBridgeProvider:
             outputs: The outputs of the span.
         """
 
-        run_id = (
-            uuid_mod.UUID(context.span_id)
-            if ExecutionContext._is_valid_uuid(context.span_id)
-            else uuid_mod.uuid4()
-        )
+        run_id = _parse_or_generate_uuid(context.span_id)
 
         event_name = {
             "chain": "on_chain_end",
@@ -296,11 +318,7 @@ class CallbackBridgeProvider:
             error: The exception that caused the failure.
         """
 
-        run_id = (
-            uuid_mod.UUID(context.span_id)
-            if ExecutionContext._is_valid_uuid(context.span_id)
-            else uuid_mod.uuid4()
-        )
+        run_id = _parse_or_generate_uuid(context.span_id)
 
         event_name = {
             "chain": "on_chain_error",
@@ -354,11 +372,7 @@ class CallbackBridgeProvider:
             data: Optional event payload.
         """
 
-        run_id = (
-            uuid_mod.UUID(context.span_id)
-            if ExecutionContext._is_valid_uuid(context.span_id)
-            else uuid_mod.uuid4()
-        )
+        run_id = _parse_or_generate_uuid(context.span_id)
 
         text = f"[{name}] {data}" if data else f"[{name}]"
         for handler in self._handlers:

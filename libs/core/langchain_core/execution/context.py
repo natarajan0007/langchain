@@ -173,7 +173,7 @@ class ExecutionContext:
             A dictionary compatible with `RunnableConfig`.
         """
         return {
-            "run_id": uuid.UUID(self.span_id) if self._is_valid_uuid(self.span_id) else None,
+            "run_id": self._try_parse_uuid(self.span_id),
             "tags": list(self.tags),
             "metadata": dict(self.metadata),
             "run_name": self.name,
@@ -197,6 +197,21 @@ class ExecutionContext:
         if self.parent_span_id is None:
             return [self.span_id]
         return [self.parent_span_id, self.span_id]
+
+    @staticmethod
+    def _try_parse_uuid(val: str) -> uuid.UUID | None:
+        """Try to parse a string as a UUID.
+
+        Args:
+            val: The string to parse.
+
+        Returns:
+            The parsed `uuid.UUID`, or `None` if the string is not valid.
+        """
+        try:
+            return uuid.UUID(val)
+        except (ValueError, AttributeError):
+            return None
 
     @staticmethod
     def _is_valid_uuid(val: str) -> bool:
